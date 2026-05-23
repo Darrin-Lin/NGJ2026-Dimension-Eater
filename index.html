@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dimension Eater</title>
+  <!-- SEO Tags -->
+  <meta name="description" content="A side-scrolling, time-manipulation dimensional action puzzle game. Control a temporal chain across parallel Z-axis dimensions to avert causal cascades.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Neon scanline overlay for retro arcade feel -->
+    <div class="scanlines"></div>
+
+    <!-- MAIN MENU SCREEN -->
+    <div id="menu-screen" class="ui-screen active">
+      <div class="glass-panel main-menu-content">
+        <h1 class="game-title">DIMENSION<br><span class="neon-text">EATER</span></h1>
+        <p class="game-tagline">3D Temporal Chain Navigation & Upstream Causal Intervention</p>
+
+        <div class="menu-sections">
+          <div class="how-to-play glass-panel-sub">
+            <h3>LOGICAL RULES</h3>
+            <ul>
+              <li><span class="highlight">Time-Axis (X):</span> Scroll moves left. Pushing right expands your reach.</li>
+              <li><span class="highlight">Base length (L):</span> Eat <strong>Time Essence</strong> (cyan orbs) to grow.</li>
+              <li><span class="highlight">Dimensional Jump:</span> At L = 16, 25, 36..., you unlock additional parallel Z-layers!</li>
+              <li><span class="highlight">Causal Cascade:</span> Prerequisite nodes spawn on upper layers. Destroy them at the Horizon (far right) before they scroll left to prevent lethal obstacle barrages on the Base Timeline!</li>
+              <li><span class="highlight">Rewind:</span> Hitting an obstacle triggers an automatic rewind. Your length is reduced by 20% to repair the timeline. If L &lt; 3, you trigger a permanent paradox (Game Over).</li>
+            </ul>
+          </div>
+
+          <div class="keybinds-guide glass-panel-sub">
+            <h3>CONTROLS</h3>
+            <div class="controls-grid">
+              <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>▲</kbd><kbd>◀</kbd><kbd>▼</kbd><kbd>▶</kbd></div>
+              <div>Navigate space-time coordinates</div>
+              
+              <div><kbd>Q</kbd> / <kbd>E</kbd> (or <kbd>Space</kbd> / <kbd>Shift</kbd>)</div>
+              <div>Shift between Z-Dimensions</div>
+            </div>
+          </div>
+        </div>
+
+        <button id="start-button" class="btn-neon">INITIALIZE TIMELINE</button>
+      </div>
+    </div>
+
+    <!-- GAMEPLAY HUD OVERLAY -->
+    <div id="hud-overlay" class="hud-container hidden">
+      <!-- Top Bar: Core Stats -->
+      <div class="hud-header glass-panel">
+        <div class="hud-stat score-box">
+          <span class="stat-label">SCORE</span>
+          <span id="score-val" class="stat-value neon-cyan">000000</span>
+        </div>
+        <div class="hud-stat multiplier-box">
+          <span class="stat-label">MULTIPLIER</span>
+          <span id="mult-val" class="stat-value neon-pink">x1.0</span>
+        </div>
+        <div class="hud-stat length-box">
+          <span class="stat-label">LENGTH</span>
+          <div class="progress-bar-container">
+            <div id="length-bar" class="progress-bar neon-cyan-bg" style="width: 18%"></div>
+          </div>
+          <span id="length-val" class="stat-value">3 / 16</span>
+        </div>
+        <div class="hud-stat dimension-box" style="display: none;">
+          <span class="stat-label">Z-DIMENSIONS</span>
+          <div class="layer-indicators" id="layer-indicators-container">
+            <span class="layer-dot active" title="Base Layer 0">L0</span>
+            <span class="layer-dot locked" title="Layer 1 - Unlocks at L=16">L1</span>
+            <span class="layer-dot locked" title="Layer 2 - Unlocks at L=25">L2</span>
+          </div>
+        </div>
+        <div class="hud-stat timer-box">
+          <span class="stat-label">ELAPSED TIME</span>
+          <span id="timer-val" class="stat-value neon-orange">00:00</span>
+        </div>
+      </div>
+
+      <!-- Causal Cascade Anomaly Alerts -->
+      <div id="anomaly-alerts" class="alerts-container">
+        <!-- Dynamic alert items go here -->
+      </div>
+
+      <!-- Left Sidebar: Controls Legend -->
+      <button id="sidebar-toggle" class="btn-icon" style="position: absolute; left: 15px; top: 100px; pointer-events: auto; z-index: 12;" title="Toggle Controls Guide">⌨️ CONTROLS</button>
+      <div id="hud-sidebar" class="hud-sidebar glass-panel hidden">
+        <div class="sidebar-section">
+          <h4>NAVIGATION</h4>
+          <p><kbd>W</kbd><kbd>S</kbd>: Space Axis</p>
+          <p><kbd>A</kbd><kbd>D</kbd>: Time Reach</p>
+        </div>
+        <div class="sidebar-section">
+          <h4>DIMENSION</h4>
+          <p><kbd>E</kbd> / <kbd>Space</kbd>: Shift Up</p>
+          <p><kbd>Q</kbd> / <kbd>Shift</kbd>: Shift Down</p>
+        </div>
+        <div class="sidebar-section audio-toggle-container">
+          <button id="audio-toggle" class="btn-icon" title="Toggle Synthesizer Hum">🔊 HUM ON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REWIND WARNING OVERLAY -->
+    <div id="rewind-overlay" class="ui-screen hidden">
+      <div class="rewind-content">
+        <h2 class="rewind-title neon-red">TIME PARADOX DETECTED</h2>
+        <div class="rewind-glitch">REWINDING TIMELINE...</div>
+        <div class="rewind-stats">
+          <span>Severing <span id="rewind-sever-count" class="neon-pink">5</span> nodes...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="gameover-screen" class="ui-screen hidden">
+      <div class="glass-panel summary-panel">
+        <h2 class="neon-red screen-title">TIMELINE COLLAPSED</h2>
+        <p class="summary-cause" id="gameover-cause">Your timeline length became insufficient to sustain dimensional stabilization.</p>
+
+        <div class="summary-stats">
+          <div class="stat-row">
+            <span>Final Score</span>
+            <span id="go-score" class="neon-cyan">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Max Length Reached</span>
+            <span id="go-length" class="neon-pink">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Dimensions Unlocked</span>
+            <span id="go-layers" class="neon-orange">1</span>
+          </div>
+          <div class="stat-row">
+            <span>Causal Anomalies Resolved</span>
+            <span id="go-anomalies" class="neon-green">0</span>
+          </div>
+        </div>
+
+        <button id="restart-go-button" class="btn-neon btn-red">RE-STABILIZE TIMELINE</button>
+      </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen" class="ui-screen hidden">
+      <div class="glass-panel summary-panel">
+        <h2 class="neon-green screen-title">TIMELINE STABILIZED</h2>
+        <p class="summary-cause">Congratulations! You successfully survived the temporal anomaly stream and completed the level.</p>
+
+        <div class="summary-stats">
+          <div class="stat-row">
+            <span>Final Score</span>
+            <span id="vic-score" class="neon-cyan">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Max Length Reached</span>
+            <span id="vic-length" class="neon-pink">0</span>
+          </div>
+          <div class="stat-row">
+            <span>Dimensions Unlocked</span>
+            <span id="vic-layers" class="neon-orange">1</span>
+          </div>
+          <div class="stat-row">
+            <span>Causal Anomalies Resolved</span>
+            <span id="vic-anomalies" class="neon-green">0</span>
+          </div>
+        </div>
+
+        <button id="restart-vic-button" class="btn-neon btn-green">ENTER NEXT EPOCH</button>
+      </div>
+    </div>
+
+    <!-- CANVAS VIEWPORT -->
+    <div id="canvas-container"></div>
+  </div>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
