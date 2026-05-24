@@ -594,3 +594,35 @@ kbd {
     transform: translate(0);
   }
 }
+
+/* Immunity Grace Period Banner styling */
+.immunity-banner {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: none;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-color: var(--cyan);
+  box-shadow: 0 0 15px var(--cyan-dim);
+  z-index: 15;
+  animation: pulse-immunity 1.5s infinite alternate;
+}
+
+@keyframes pulse-immunity {
+  0% {
+    box-shadow: 0 0 8px var(--cyan-dim);
+    border-color: hsla(180, 100%, 50%, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 20px hsla(180, 100%, 50%, 0.7);
+    border-color: var(--cyan);
+  }
+}
+

@@ -1,4 +1,4 @@
-import { GameEntity, CONFIG } from './Types';
+import { GameEntity } from './Types';
 import { SoundEffects } from './SoundEffects';
 
 export class UI {
@@ -10,6 +10,8 @@ export class UI {
   private victoryScreen = document.getElementById('victory-screen')!;
   private sidebarToggle = document.getElementById('sidebar-toggle')!;
   private hudSidebar = document.getElementById('hud-sidebar')!;
+  private immunityBanner = document.getElementById('immunity-banner')!;
+  private immunityTimer = document.getElementById('immunity-timer')!;
 
   // Values
   private scoreVal = document.getElementById('score-val')!;
@@ -18,7 +20,7 @@ export class UI {
   private lengthVal = document.getElementById('length-val')!;
   private timerVal = document.getElementById('timer-val')!;
   private alertContainer = document.getElementById('anomaly-alerts')!;
-  private layerContainer = document.getElementById('layer-indicators-container')!;
+  private unlockedDimVal = document.getElementById('unlocked-dim-val')!;
   private audioToggle = document.getElementById('audio-toggle')!;
 
   // Stats summaries
@@ -123,7 +125,21 @@ export class UI {
     this.rewindOverlay.classList.add('hidden');
     this.gameoverScreen.classList.add('hidden');
     this.victoryScreen.classList.add('hidden');
+    this.immunityBanner.classList.add('hidden');
   }
+
+  /**
+   * Update the spawn protection / chronal immunity banner remaining time
+   */
+  public updateImmunity(timeLeft: number) {
+    if (timeLeft > 0) {
+      this.immunityBanner.classList.remove('hidden');
+      this.immunityTimer.textContent = timeLeft.toFixed(1);
+    } else {
+      this.immunityBanner.classList.add('hidden');
+    }
+  }
+
 
   /**
    * Update all numeric HUD variables
@@ -133,8 +149,7 @@ export class UI {
     multiplier: number,
     length: number,
     timeSec: number,
-    unlockedLayers: number,
-    activeLayer: number
+    unlockedLayers: number
   ) {
     // Score pads with zeros
     this.scoreVal.textContent = score.toString().padStart(6, '0');
@@ -146,9 +161,9 @@ export class UI {
     this.timerVal.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
     // Update length bar
-    // Standard square thresholds grow dynamically as L = n^2
-    let threshold = 16;
-    if (length >= 16) {
+    // Standard square thresholds grow dynamically as L = n^2 starting at 4
+    let threshold = 4;
+    if (length >= 4) {
       const nextN = Math.floor(Math.sqrt(length)) + 1;
       threshold = nextN * nextN;
     }
@@ -156,31 +171,8 @@ export class UI {
     this.lengthBar.style.width = `${percent}%`;
     this.lengthVal.textContent = `${length} / ${threshold}`;
 
-    // Update layer dot indicators in UI
-    this.updateLayersUI(unlockedLayers, activeLayer);
-  }
-
-  private updateLayersUI(unlocked: number, active: number) {
-    this.layerContainer.innerHTML = '';
-    
-    for (let i = 0; i < CONFIG.MAX_LAYERS; i++) {
-      const dot = document.createElement('span');
-      dot.className = 'layer-dot';
-      dot.textContent = `D${i}`;
-
-      if (i >= unlocked) {
-        dot.className += ' locked';
-        let req = 16;
-        if (i === 2) req = 25;
-        dot.title = `Dimension ${i} - Unlocks at L = ${req}`;
-      } else {
-        dot.title = `Dimension ${i} - Unlocked`;
-        if (i === active) {
-          dot.className += ' active';
-        }
-      }
-      this.layerContainer.appendChild(dot);
-    }
+    // Update total dimensions count in UI
+    this.unlockedDimVal.textContent = unlockedLayers.toString();
   }
 
   /**

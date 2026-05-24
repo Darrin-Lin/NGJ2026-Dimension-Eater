@@ -70,18 +70,20 @@
           </div>
           <span id="length-val" class="stat-value">3 / 16</span>
         </div>
-        <div class="hud-stat dimension-box" style="display: none;">
-          <span class="stat-label">Z-DIMENSIONS</span>
-          <div class="layer-indicators" id="layer-indicators-container">
-            <span class="layer-dot active" title="Base Layer 0">L0</span>
-            <span class="layer-dot locked" title="Layer 1 - Unlocks at L=16">L1</span>
-            <span class="layer-dot locked" title="Layer 2 - Unlocks at L=25">L2</span>
-          </div>
+        <div class="hud-stat unlocked-dim-box">
+          <span class="stat-label">TOTAL DIMS</span>
+          <span id="unlocked-dim-val" class="stat-value neon-green">1</span>
         </div>
         <div class="hud-stat timer-box">
           <span class="stat-label">ELAPSED TIME</span>
           <span id="timer-val" class="stat-value neon-orange">00:00</span>
         </div>
+      </div>
+
+      <!-- SPAWN PROTECTION INVINCIBILITY BANNER -->
+      <div id="immunity-banner" class="immunity-banner glass-panel hidden">
+        <span class="immunity-icon">🛡️</span>
+        <span class="immunity-text">CHRONAL SHIELD: <span id="immunity-timer" class="neon-cyan">3.0</span>s</span>
       </div>
 
       <!-- Causal Cascade Anomaly Alerts -->

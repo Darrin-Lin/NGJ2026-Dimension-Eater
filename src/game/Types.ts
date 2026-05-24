@@ -45,7 +45,8 @@ export const CONFIG = {
 
   // Length constraints
   INITIAL_SNAKE_LENGTH: 3,
-  NODE_SPACING: 6, // distance between body nodes in history ticks
+  VICTORY_LENGTH: 50, // Reaching this length triggers victory
+  NODE_SPACING: 3, // distance between body nodes in history ticks
 
   // Dimensions (Z-layers)
   MAX_LAYERS: 10, // Max dynamic parallel timeline dimensions

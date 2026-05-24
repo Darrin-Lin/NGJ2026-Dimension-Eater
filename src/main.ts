@@ -34,6 +34,7 @@ class GameController {
   // Scroll metrics
   private scrollOffset: number = 0;
   private rewindTimer: number = 0;
+  private spawnGraceTimer: number = 0;
 
   constructor() {
     this.initPixi();
@@ -101,13 +102,15 @@ class GameController {
     this.sfx.enableAudio();
     this.state = 'PLAYING';
 
-    // Create new player timeline snake
-    this.snake = new Snake(150, CONFIG.GAME_HEIGHT / 2, 0);
+    // Create new player timeline snake with dynamic starting X based on length
+    const startX = Math.max(150, Math.min(500, CONFIG.INITIAL_SNAKE_LENGTH * CONFIG.NODE_SPACING * 1.5 + 50));
+    this.snake = new Snake(startX, CONFIG.GAME_HEIGHT / 2, 0);
     this.sfx.setDimensionHum(0);
 
     // Reset components and stats
     this.levelManager.reset();
     this.score = 0;
+    this.spawnGraceTimer = 5.0;
     this.scoreMultiplier = 1.0;
     this.maxLengthReached = CONFIG.INITIAL_SNAKE_LENGTH;
     this.scrollOffset = 0;
@@ -130,14 +133,17 @@ class GameController {
 
   private getUnlockedLayersCount(): number {
     const len = this.snake.length;
-    // Perfect square formula to unlock dimensions as per docs.md:
-    // L = n^2 where n >= 4. N = 16 -> 2 layers, N = 25 -> 3 layers, etc.
-    // Dynamic formula with no hard cap: N_layers = Math.floor(Math.sqrt(L)) - 2
-    if (len < 16) return 1;
-    return Math.floor(Math.sqrt(len)) - 2;
+    // Perfect square formula starting at L = 4 (n >= 2)
+    if (len < 4) return 1;
+    return Math.floor(Math.sqrt(len));
   }
 
   private updatePlaying(dt: number) {
+    // Decrement starting invincibility grace period
+    if (this.spawnGraceTimer > 0) {
+      this.spawnGraceTimer = Math.max(0, this.spawnGraceTimer - dt / 60);
+    }
+
     // 1. Scaled Difficulty scroll speed
     // Scroll speed escalates as elapsed time increases
     const elapsedSec = this.levelManager.getElapsedTime();
@@ -182,13 +188,13 @@ class GameController {
     this.checkCollisions();
 
     // 4. Fail / Win Checks
-    if (this.snake.isTailOut() || this.snake.length < 3) {
+    if (this.spawnGraceTimer <= 0 && (this.snake.isTailOut() || this.snake.length < 3)) {
       this.triggerGameOver("Timeline collapsed! Your snake tail was forced past the Left Present line (Death Line).");
       return;
     }
 
-    // Victory condition: reaching length >= 25 (unlocking all dimensions)
-    if (this.snake.length >= 25) {
+    // Victory condition: reaching length >= CONFIG.VICTORY_LENGTH
+    if (this.snake.length >= CONFIG.VICTORY_LENGTH) {
       this.triggerVictory();
       return;
     }
@@ -198,7 +204,7 @@ class GameController {
 
     this.gameplayGraphics.clear();
     this.levelManager.draw(this.gameplayGraphics, this.renderer3D);
-    this.snake.draw(this.gameplayGraphics, this.renderer3D);
+    this.snake.draw(this.gameplayGraphics, this.renderer3D, this.spawnGraceTimer > 0);
 
     // 6. Update HUD Stats (counting stopwatch time upwards)
     this.ui.updateHUD(
@@ -206,10 +212,10 @@ class GameController {
       this.scoreMultiplier,
       this.snake.length,
       this.levelManager.getElapsedTime(),
-      unlockedLayers,
-      this.snake.head.z
+      unlockedLayers
     );
 
+    this.ui.updateImmunity(this.spawnGraceTimer);
     this.ui.updateAlerts(this.levelManager.activeCascades);
   }
 
@@ -251,6 +257,11 @@ class GameController {
       }
       this.scoreMultiplier = Math.min(4.0, this.scoreMultiplier + 0.4);
       return; // ramming prereq doesn't cause collision damage!
+    }
+
+    // Bypassing dangerous collisions during spawn invincibility grace period
+    if (this.spawnGraceTimer > 0) {
+      return;
     }
 
     // Dangerous Obstacles and Laser Projectiles

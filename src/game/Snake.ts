@@ -10,7 +10,7 @@ export class Snake {
 
   // History queue to store exact historical 3D path of the head
   private history: Point3D[] = [];
-  
+
   // Track target layer and transitions
   private targetLayer: number = 0;
 
@@ -22,7 +22,7 @@ export class Snake {
     const totalTicksNeeded = CONFIG.INITIAL_SNAKE_LENGTH * CONFIG.NODE_SPACING;
     for (let i = 0; i < totalTicksNeeded; i++) {
       this.history.push({
-        x: startX - i * 1.5,
+        x: Math.max(20, startX - i * 1.5),
         y: startY,
         z: startZ
       });
@@ -38,7 +38,7 @@ export class Snake {
     for (let i = 0; i < this.history.length; i++) {
       this.history[i].x -= scrollSpeed;
     }
-    
+
     // Also scroll the head if player is not inputting movement, to represent scrolling drag
     this.head.x -= scrollSpeed;
   }
@@ -47,9 +47,12 @@ export class Snake {
    * Handle user movement input on the current layer
    */
   public move(dx: number, dy: number) {
+    // Dynamic temporal speed acceleration based on length
+    const speed = CONFIG.SNAKE_SPEED + (this.length - 3) * 0.8;
+
     // Normal WASD/Arrow movement
-    this.head.x += dx * CONFIG.SNAKE_SPEED;
-    this.head.y += dy * CONFIG.SNAKE_SPEED;
+    this.head.x += dx * speed;
+    this.head.y += dy * speed;
 
     // 1. Enforce logical bounds
     // Y bounds (Space Axis)
@@ -128,12 +131,12 @@ export class Snake {
   public idleUpdate() {
     // Even when idle, the head position must be logged to history so the trail continues to track correctly
     this.history.unshift({ x: this.head.x, y: this.head.y, z: this.head.z });
-    
+
     const maxHistoryNeeded = (this.length + 5) * CONFIG.NODE_SPACING;
     if (this.history.length > maxHistoryNeeded) {
       this.history.length = maxHistoryNeeded;
     }
-    
+
     this.updateBodyPositions();
   }
 
@@ -142,7 +145,7 @@ export class Snake {
    */
   public grow() {
     this.length++;
-    
+
     // Add additional history padding so new node has segment coordinates available
     const lastHist = this.history[this.history.length - 1] || this.head;
     for (let i = 0; i < CONFIG.NODE_SPACING; i++) {
@@ -160,7 +163,7 @@ export class Snake {
    */
   public rewindShrink(severCount: number, unlockedLayersCount: number) {
     this.length = Math.max(1, this.length - severCount);
-    
+
     // Slice history queue
     const maxHist = (this.length + 2) * CONFIG.NODE_SPACING;
     if (this.history.length > maxHist) {
@@ -177,7 +180,7 @@ export class Snake {
       this.targetLayer = unlockedLayersCount - 1;
       this.head.z = this.targetLayer;
     }
-    
+
     this.updateBodyPositions();
   }
 
@@ -188,13 +191,13 @@ export class Snake {
     const clampedZ = Math.min(pos.z, unlockedLayersCount - 1);
     this.head = { x: pos.x, y: pos.y, z: clampedZ };
     this.targetLayer = clampedZ;
-    
+
     // Reset history queue behind this new position
     this.history = [];
     const totalTicks = this.length * CONFIG.NODE_SPACING;
     for (let i = 0; i < totalTicks; i++) {
       this.history.push({
-        x: pos.x - i * 1.5,
+        x: Math.max(20, pos.x - i * 1.5),
         y: pos.y,
         z: clampedZ
       });
@@ -208,14 +211,17 @@ export class Snake {
   public isTailOut(): boolean {
     if (this.body.length === 0) return false;
     const tail = this.body[this.body.length - 1];
-    return tail.x < 0;
+    return tail.x < -15; // 15px off-screen buffer for player comfort and safety
   }
 
   /**
    * Render the glowing temporal snake chain on screen using Renderer3D projection
    */
-  public draw(graphics: PIXI.Graphics, renderer: Renderer3D) {
+  public draw(graphics: PIXI.Graphics, renderer: Renderer3D, isInvincible: boolean = false) {
     if (this.body.length === 0) return;
+
+    // Pulse effect during starting invincibility
+    const invAlphaMod = isInvincible ? (0.4 + 0.35 * Math.sin(Date.now() / 80)) : 1.0;
 
     // 1. Draw glowing connecting lines between body nodes
     for (let i = 0; i < this.body.length - 1; i++) {
@@ -228,19 +234,19 @@ export class Snake {
       if (nodeA.z === nodeB.z) {
         // Same dimension connector
         const color = renderer.getLayerColor(nodeA.z);
-        graphics.lineStyle(4, color, 0.7);
+        graphics.lineStyle(4, color, 0.7 * invAlphaMod);
         graphics.moveTo(pA.x, pA.y);
         graphics.lineTo(pB.x, pB.y);
       } else {
         // Dimension transition connector (draw glowing vertical dotted pipeline)
-        graphics.lineStyle(2, 0xffffff, 0.4);
-        
+        graphics.lineStyle(2, 0xffffff, 0.4 * invAlphaMod);
+
         // Custom dotted line formula
         const dx = pB.x - pA.x;
         const dy = pB.y - pA.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const dots = Math.max(5, Math.floor(dist / 8));
-        
+
         for (let j = 0; j < dots; j += 2) {
           const t1 = j / dots;
           const t2 = (j + 1) / dots;
@@ -258,7 +264,7 @@ export class Snake {
 
       // Fade body color towards tail
       const progress = i / this.body.length;
-      const alpha = 0.85 * (1 - progress * 0.6);
+      const alpha = 0.85 * (1 - progress * 0.6) * invAlphaMod;
       const radius = 6 * (1 - progress * 0.4);
 
       graphics.lineStyle(1.5, 0xffffff, alpha * 0.5);
@@ -273,14 +279,14 @@ export class Snake {
 
     // Glowing outer halo
     graphics.lineStyle(0);
-    graphics.beginFill(headColor, 0.3);
+    graphics.beginFill(headColor, 0.3 * invAlphaMod);
     graphics.drawCircle(headPt.x, headPt.y, 14);
     graphics.endFill();
 
     // Central diamond shape
-    graphics.lineStyle(2.5, 0xffffff, 0.95);
-    graphics.beginFill(headColor, 0.9);
-    
+    graphics.lineStyle(2.5, 0xffffff, 0.95 * invAlphaMod);
+    graphics.beginFill(headColor, 0.9 * invAlphaMod);
+
     graphics.moveTo(headPt.x, headPt.y - 9);  // Top
     graphics.lineTo(headPt.x + 9, headPt.y);  // Right
     graphics.lineTo(headPt.x, headPt.y + 9);  // Bottom
@@ -289,7 +295,7 @@ export class Snake {
     graphics.endFill();
 
     // Inner bright core
-    graphics.beginFill(0xffffff, 0.95);
+    graphics.beginFill(0xffffff, 0.95 * invAlphaMod);
     graphics.drawCircle(headPt.x, headPt.y, 3);
     graphics.endFill();
   }
