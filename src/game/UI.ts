@@ -23,6 +23,14 @@ export class UI {
   private unlockedDimVal = document.getElementById('unlocked-dim-val')!;
   private audioToggle = document.getElementById('audio-toggle')!;
 
+  // Player 2 elements for Versus Mode
+  private score2Box = document.getElementById('score2-box')!;
+  private score2Val = document.getElementById('score2-val')!;
+  private length2Box = document.getElementById('length2-box')!;
+  private length2Bar = document.getElementById('length2-bar')!;
+  private length2Val = document.getElementById('length2-val')!;
+  private currentMode: 'SINGLE' | 'VERSUS' = 'SINGLE';
+
   // Stats summaries
   private goCause = document.getElementById('gameover-cause')!;
   private goScore = document.getElementById('go-score')!;
@@ -36,29 +44,72 @@ export class UI {
   private vicAnomalies = document.getElementById('vic-anomalies')!;
 
   private rewindSever = document.getElementById('rewind-sever-count')!;
+  
+  // Versus results screen elements
+  private versusScreen = document.getElementById('versus-screen')!;
+  private vsWinnerTitle = document.getElementById('vs-winner-title')!;
+  private vsSummaryCause = document.getElementById('vs-summary-cause')!;
+  private vsP1Card = document.getElementById('vs-p1-card')!;
+  private vsP2Card = document.getElementById('vs-p2-card')!;
+  private vsP1Status = document.getElementById('vs-p1-status')!;
+  private vsP2Status = document.getElementById('vs-p2-status')!;
+  private vsP1Score = document.getElementById('vs-p1-score')!;
+  private vsP2Score = document.getElementById('vs-p2-score')!;
+  private vsP1Length = document.getElementById('vs-p1-length')!;
+  private vsP2Length = document.getElementById('vs-p2-length')!;
+
 
   constructor(
-    private onStartGame: () => void,
+    private onStartGame: (mode: 'SINGLE' | 'VERSUS') => void,
+    private onReturnToMenu: () => void,
     private sfx: SoundEffects
   ) {
     this.setupListeners();
   }
 
   private setupListeners() {
-    // Menu start button
-    document.getElementById('start-button')!.addEventListener('click', () => {
+    // Menu start buttons
+    document.getElementById('start-single')!.addEventListener('click', () => {
       this.sfx.enableAudio();
-      this.onStartGame();
+      this.currentMode = 'SINGLE';
+      this.onStartGame('SINGLE');
+    });
+
+    document.getElementById('start-versus')!.addEventListener('click', () => {
+      this.sfx.enableAudio();
+      this.currentMode = 'VERSUS';
+      this.onStartGame('VERSUS');
     });
 
     // Post-game buttons
     document.getElementById('restart-go-button')!.addEventListener('click', () => {
-      this.onStartGame();
+      this.onStartGame(this.currentMode);
     });
 
     document.getElementById('restart-vic-button')!.addEventListener('click', () => {
-      this.onStartGame();
+      this.onStartGame(this.currentMode);
     });
+
+    document.getElementById('restart-vs-button')!.addEventListener('click', () => {
+      this.onStartGame(this.currentMode);
+    });
+
+    // Return to Menu buttons
+    document.getElementById('menu-go-button')!.addEventListener('click', () => {
+      this.showMenu();
+      this.onReturnToMenu();
+    });
+
+    document.getElementById('menu-vic-button')!.addEventListener('click', () => {
+      this.showMenu();
+      this.onReturnToMenu();
+    });
+
+    document.getElementById('menu-vs-button')!.addEventListener('click', () => {
+      this.showMenu();
+      this.onReturnToMenu();
+    });
+
 
     // Sound hum toggle
     this.audioToggle.addEventListener('click', () => {
@@ -91,6 +142,17 @@ export class UI {
     this.hudOverlay.classList.remove('hidden');
   }
 
+  public setPlayMode(mode: 'SINGLE' | 'VERSUS') {
+    this.currentMode = mode;
+    if (mode === 'SINGLE') {
+      this.score2Box.classList.add('hidden');
+      this.length2Box.classList.add('hidden');
+    } else {
+      this.score2Box.classList.remove('hidden');
+      this.length2Box.classList.remove('hidden');
+    }
+  }
+
   public showRewind(severCount: number) {
     this.rewindSever.textContent = severCount.toString();
     this.rewindOverlay.classList.remove('hidden');
@@ -119,12 +181,64 @@ export class UI {
     this.victoryScreen.classList.remove('hidden');
   }
 
+  public showVersusResults(
+    winner: 'P1' | 'P2' | 'DRAW',
+    cause: string,
+    p1Stats: { score: number; maxLength: number; isStabilized: boolean },
+    p2Stats: { score: number; maxLength: number; isStabilized: boolean }
+  ) {
+    this.hideAll();
+    
+    // Set winner title and neon glow
+    if (winner === 'P1') {
+      this.vsWinnerTitle.textContent = "PLAYER 1 WINS!";
+      this.vsWinnerTitle.className = "screen-title neon-cyan";
+      this.vsP1Card.classList.add('winner-highlight');
+      this.vsP2Card.classList.remove('winner-highlight');
+    } else if (winner === 'P2') {
+      this.vsWinnerTitle.textContent = "PLAYER 2 WINS!";
+      this.vsWinnerTitle.className = "screen-title neon-pink";
+      this.vsP1Card.classList.remove('winner-highlight');
+      this.vsP2Card.classList.add('winner-highlight');
+    } else {
+      this.vsWinnerTitle.textContent = "TIMELINE TIE!";
+      this.vsWinnerTitle.className = "screen-title neon-blue";
+      this.vsP1Card.classList.remove('winner-highlight');
+      this.vsP2Card.classList.remove('winner-highlight');
+    }
+    
+    // Set cause explanation
+    this.vsSummaryCause.textContent = cause;
+    
+    // Set stabilized / collapsed statuses
+    this.vsP1Status.textContent = p1Stats.isStabilized ? "STABILIZED" : "COLLAPSED";
+    this.vsP1Status.style.color = p1Stats.isStabilized ? "var(--cyan)" : "var(--red)";
+    this.vsP1Status.style.borderColor = p1Stats.isStabilized ? "var(--cyan)" : "var(--red)";
+    this.vsP1Status.style.boxShadow = p1Stats.isStabilized ? "0 0 10px var(--cyan-dim)" : "0 0 10px var(--red-dim)";
+    
+    this.vsP2Status.textContent = p2Stats.isStabilized ? "STABILIZED" : "COLLAPSED";
+    this.vsP2Status.style.color = p2Stats.isStabilized ? "var(--pink)" : "var(--red)";
+    this.vsP2Status.style.borderColor = p2Stats.isStabilized ? "var(--pink)" : "var(--red)";
+    this.vsP2Status.style.boxShadow = p2Stats.isStabilized ? "0 0 10px var(--pink-dim)" : "0 0 10px var(--red-dim)";
+    
+    // Populate stats scores & max lengths
+    this.vsP1Score.textContent = Math.floor(p1Stats.score).toLocaleString();
+    this.vsP1Length.textContent = p1Stats.maxLength.toString();
+    
+    this.vsP2Score.textContent = Math.floor(p2Stats.score).toLocaleString();
+    this.vsP2Length.textContent = p2Stats.maxLength.toString();
+    
+    // Show the results overlay screen
+    this.versusScreen.classList.remove('hidden');
+  }
+
   private hideAll() {
     this.menuScreen.classList.add('hidden');
     this.hudOverlay.classList.add('hidden');
     this.rewindOverlay.classList.add('hidden');
     this.gameoverScreen.classList.add('hidden');
     this.victoryScreen.classList.add('hidden');
+    this.versusScreen.classList.add('hidden');
     this.immunityBanner.classList.add('hidden');
   }
 
@@ -149,7 +263,9 @@ export class UI {
     multiplier: number,
     length: number,
     timeSec: number,
-    unlockedLayers: number
+    unlockedLayers: number,
+    score2?: number,
+    length2?: number
   ) {
     // Score pads with zeros
     this.scoreVal.textContent = score.toString().padStart(6, '0');
@@ -173,6 +289,20 @@ export class UI {
 
     // Update total dimensions count in UI
     this.unlockedDimVal.textContent = unlockedLayers.toString();
+
+    // Player 2 statistics in Versus Mode
+    if (this.currentMode === 'VERSUS' && score2 !== undefined && length2 !== undefined) {
+      this.score2Val.textContent = score2.toString().padStart(6, '0');
+      
+      let threshold2 = 4;
+      if (length2 >= 4) {
+        const nextN2 = Math.floor(Math.sqrt(length2)) + 1;
+        threshold2 = nextN2 * nextN2;
+      }
+      const percent2 = Math.min(100, (length2 / threshold2) * 100);
+      this.length2Bar.style.width = `${percent2}%`;
+      this.length2Val.textContent = `${length2} / ${threshold2}`;
+    }
   }
 
   /**

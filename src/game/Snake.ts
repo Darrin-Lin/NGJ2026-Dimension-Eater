@@ -14,9 +14,24 @@ export class Snake {
   // Track target layer and transitions
   private targetLayer: number = 0;
 
-  constructor(startX: number, startY: number, startZ: number) {
+  public colorTheme: 'CYAN' | 'PINK' = 'CYAN';
+
+  private particles: Array<{
+    x: number;
+    y: number;
+    z: number;
+    vx: number;
+    vy: number;
+    size: number;
+    alpha: number;
+    decay: number;
+    color: number;
+  }> = [];
+
+  constructor(startX: number, startY: number, startZ: number, colorTheme: 'CYAN' | 'PINK' = 'CYAN') {
     this.head = { x: startX, y: startY, z: startZ };
     this.targetLayer = startZ;
+    this.colorTheme = colorTheme;
 
     // Pre-fill history so body nodes start in line behind the head
     const totalTicksNeeded = CONFIG.INITIAL_SNAKE_LENGTH * CONFIG.NODE_SPACING;
@@ -141,6 +156,56 @@ export class Snake {
   }
 
   /**
+   * Update and scroll the particle systems trailing around the snake body
+   */
+  public updateParticles(dt: number, scrollOffset: number) {
+    // 1. Move and scroll existing particles
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      p.x -= scrollOffset; // Move left with grid scrolling
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.alpha -= p.decay * dt;
+
+      // Remove dead or offscreen particles
+      if (p.alpha <= 0 || p.x < -20) {
+        this.particles.splice(i, 1);
+      }
+    }
+
+    // 2. Emit new chronal spark particles
+    // Emit from head
+    if (Math.random() < 0.45) {
+      this.spawnParticle(this.head.x, this.head.y, this.head.z, true);
+    }
+
+    // Emit from body nodes
+    if (this.body.length > 0 && Math.random() < 0.55) {
+      const randomSeg = this.body[Math.floor(Math.random() * this.body.length)];
+      this.spawnParticle(randomSeg.x, randomSeg.y, randomSeg.z, false);
+    }
+  }
+
+  private spawnParticle(x: number, y: number, z: number, isHead: boolean) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = isHead ? (Math.random() * 0.9 + 0.5) : (Math.random() * 0.4 + 0.15);
+    const vx = Math.cos(angle) * speed - 0.25; // Drifts slightly left
+    const vy = Math.sin(angle) * speed;
+
+    this.particles.push({
+      x,
+      y,
+      z,
+      vx,
+      vy,
+      size: isHead ? (Math.random() * 3 + 2.5) : (Math.random() * 2 + 1.2),
+      alpha: 1.0,
+      decay: Math.random() * 0.025 + 0.015,
+      color: this.getSnakeColor(z)
+    });
+  }
+
+  /**
    * Colliding with a Time Essence increases body node length permanently by 1
    */
   public grow() {
@@ -214,6 +279,16 @@ export class Snake {
     return tail.x < -15; // 15px off-screen buffer for player comfort and safety
   }
 
+  public getSnakeColor(z: number): number {
+    if (this.colorTheme === 'CYAN') {
+      const colors = [0x00f0ff, 0x00ff80, 0x0080ff, 0xffff00];
+      return colors[z % colors.length];
+    } else {
+      const colors = [0xff0055, 0xff00ff, 0xbf00ff, 0xff8000];
+      return colors[z % colors.length];
+    }
+  }
+
   /**
    * Render the glowing temporal snake chain on screen using Renderer3D projection
    */
@@ -233,7 +308,7 @@ export class Snake {
 
       if (nodeA.z === nodeB.z) {
         // Same dimension connector
-        const color = renderer.getLayerColor(nodeA.z);
+        const color = this.getSnakeColor(nodeA.z);
         graphics.lineStyle(4, color, 0.7 * invAlphaMod);
         graphics.moveTo(pA.x, pA.y);
         graphics.lineTo(pB.x, pB.y);
@@ -260,7 +335,7 @@ export class Snake {
     for (let i = 1; i < this.body.length; i++) {
       const node = this.body[i];
       const p = renderer.toScreen(node);
-      const color = renderer.getLayerColor(node.z);
+      const color = this.getSnakeColor(node.z);
 
       // Fade body color towards tail
       const progress = i / this.body.length;
@@ -275,7 +350,7 @@ export class Snake {
 
     // 3. Draw head node as a gorgeous temporal crystal node
     const headPt = renderer.toScreen(this.head);
-    const headColor = renderer.getLayerColor(this.head.z);
+    const headColor = this.getSnakeColor(this.head.z);
 
     // Glowing outer halo
     graphics.lineStyle(0);
@@ -298,5 +373,24 @@ export class Snake {
     graphics.beginFill(0xffffff, 0.95 * invAlphaMod);
     graphics.drawCircle(headPt.x, headPt.y, 3);
     graphics.endFill();
+
+    // 4. Render glowing chronal trail particles
+    for (const p of this.particles) {
+      const pPt = renderer.toScreen(p);
+      const alpha = p.alpha * invAlphaMod;
+
+      // Draw particle circle
+      graphics.lineStyle(0);
+      graphics.beginFill(p.color, alpha * 0.85);
+      graphics.drawCircle(pPt.x, pPt.y, p.size);
+      graphics.endFill();
+
+      // Bright white inner core for larger head sparks
+      if (p.size > 3) {
+        graphics.beginFill(0xffffff, alpha * 0.9);
+        graphics.drawCircle(pPt.x, pPt.y, p.size * 0.4);
+        graphics.endFill();
+      }
+    }
   }
 }

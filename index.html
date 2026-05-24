@@ -47,7 +47,10 @@
           </div>
         </div>
 
-        <button id="start-button" class="btn-neon">INITIALIZE TIMELINE</button>
+        <div class="menu-buttons" style="display: flex; gap: 20px; width: 100%; justify-content: center; margin-top: 10px;">
+          <button id="start-single" class="btn-neon">SINGLE PLAYER</button>
+          <button id="start-versus" class="btn-neon btn-pink">2-PLAYER VERSUS</button>
+        </div>
       </div>
     </div>
 
@@ -56,19 +59,30 @@
       <!-- Top Bar: Core Stats -->
       <div class="hud-header glass-panel">
         <div class="hud-stat score-box">
-          <span class="stat-label">SCORE</span>
+          <span class="stat-label">P1 SCORE</span>
           <span id="score-val" class="stat-value neon-cyan">000000</span>
+        </div>
+        <div id="score2-box" class="hud-stat score2-box hidden">
+          <span class="stat-label">P2 SCORE</span>
+          <span id="score2-val" class="stat-value neon-pink">000000</span>
         </div>
         <div class="hud-stat multiplier-box">
           <span class="stat-label">MULTIPLIER</span>
           <span id="mult-val" class="stat-value neon-pink">x1.0</span>
         </div>
         <div class="hud-stat length-box">
-          <span class="stat-label">LENGTH</span>
+          <span class="stat-label">P1 LENGTH</span>
           <div class="progress-bar-container">
             <div id="length-bar" class="progress-bar neon-cyan-bg" style="width: 18%"></div>
           </div>
           <span id="length-val" class="stat-value">3 / 16</span>
+        </div>
+        <div id="length2-box" class="hud-stat length2-box hidden">
+          <span class="stat-label">P2 LENGTH</span>
+          <div class="progress-bar-container">
+            <div id="length2-bar" class="progress-bar neon-pink-bg" style="width: 18%"></div>
+          </div>
+          <span id="length2-val" class="stat-value">3 / 16</span>
         </div>
         <div class="hud-stat unlocked-dim-box">
           <span class="stat-label">TOTAL DIMS</span>
@@ -146,7 +160,10 @@
           </div>
         </div>
 
-        <button id="restart-go-button" class="btn-neon btn-red">RE-STABILIZE TIMELINE</button>
+        <div class="end-screen-buttons">
+          <button id="restart-go-button" class="btn-neon btn-red">RE-STABILIZE TIMELINE</button>
+          <button id="menu-go-button" class="btn-neon btn-gray">RETURN TO MENU</button>
+        </div>
       </div>
     </div>
 
@@ -175,7 +192,59 @@
           </div>
         </div>
 
-        <button id="restart-vic-button" class="btn-neon btn-green">ENTER NEXT EPOCH</button>
+        <div class="end-screen-buttons">
+          <button id="restart-vic-button" class="btn-neon btn-green">ENTER NEXT EPOCH</button>
+          <button id="menu-vic-button" class="btn-neon btn-gray">RETURN TO MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERSUS RESULTS SCREEN -->
+    <div id="versus-screen" class="ui-screen hidden">
+      <div class="glass-panel summary-panel versus-summary-panel">
+        <h2 class="screen-title neon-blue" id="vs-winner-title">VERSUS RESULTS</h2>
+        <p class="summary-cause" id="vs-summary-cause">Causal timeline evaluation completed.</p>
+
+        <div class="vs-players-container">
+          <!-- Player 1 Panel -->
+          <div class="vs-player-card glass-panel-sub" id="vs-p1-card">
+            <div class="vs-crown-holder"><span class="vs-crown" id="vs-p1-crown">👑</span></div>
+            <h3 class="neon-cyan">PLAYER 1</h3>
+            <div class="vs-player-status neon-cyan" id="vs-p1-status">STABILIZED</div>
+            <div class="summary-stats">
+              <div class="stat-row">
+                <span>Final Score</span>
+                <span id="vs-p1-score" class="neon-cyan">0</span>
+              </div>
+              <div class="stat-row">
+                <span>Max Length</span>
+                <span id="vs-p1-length" class="neon-cyan">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player 2 Panel -->
+          <div class="vs-player-card glass-panel-sub" id="vs-p2-card">
+            <div class="vs-crown-holder"><span class="vs-crown" id="vs-p2-crown">👑</span></div>
+            <h3 class="neon-pink">PLAYER 2</h3>
+            <div class="vs-player-status neon-pink" id="vs-p2-status">COLLAPSED</div>
+            <div class="summary-stats">
+              <div class="stat-row">
+                <span>Final Score</span>
+                <span id="vs-p2-score" class="neon-pink">0</span>
+              </div>
+              <div class="stat-row">
+                <span>Max Length</span>
+                <span id="vs-p2-length" class="neon-pink">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="end-screen-buttons" style="margin-top: 25px;">
+          <button id="restart-vs-button" class="btn-neon btn-blue">INITIATE NEW TIMELINE MATCH</button>
+          <button id="menu-vs-button" class="btn-neon btn-gray">RETURN TO MENU</button>
+        </div>
       </div>
     </div>
 

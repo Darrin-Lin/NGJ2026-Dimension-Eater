@@ -6,6 +6,7 @@ export interface Point3D {
   z: number;
 }
 
+export type PlayMode = 'SINGLE' | 'VERSUS';
 export type GameState = 'MENU' | 'PLAYING' | 'REWINDING' | 'GAMEOVER' | 'VICTORY';
 
 export interface GameEntity {

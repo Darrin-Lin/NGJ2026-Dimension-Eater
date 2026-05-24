@@ -110,8 +110,8 @@ body, html {
 .hud-header {
   margin: 15px;
   padding: 10px 20px;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 2fr 1.5fr 1fr;
+  display: flex;
+  justify-content: space-between;
   gap: 20px;
   align-items: center;
   pointer-events: auto;
@@ -121,6 +121,7 @@ body, html {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  flex: 1;
 }
 
 .stat-label {
@@ -147,6 +148,7 @@ body, html {
 .neon-red { color: var(--red); text-shadow: 0 0 8px var(--red); }
 
 .neon-cyan-bg { background-color: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+.neon-pink-bg { background-color: var(--pink); box-shadow: 0 0 8px var(--pink); }
 
 /* Timeline Length Progress bar */
 .progress-bar-container {
@@ -367,6 +369,18 @@ kbd {
   background: var(--green);
   color: var(--bg-dark);
   box-shadow: 0 0 30px var(--green);
+}
+
+.btn-gray {
+  color: var(--text-secondary);
+  border-color: var(--text-secondary);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.btn-gray:hover {
+  background: var(--text-secondary);
+  color: var(--bg-dark);
+  box-shadow: 0 0 20px var(--text-secondary);
 }
 
 .btn-icon {
@@ -625,4 +639,123 @@ kbd {
     border-color: var(--cyan);
   }
 }
+
+/* Versus Results Styling */
+.versus-summary-panel {
+  max-width: 780px !important;
+  width: 95% !important;
+}
+
+.vs-players-container {
+  display: flex;
+  gap: 25px;
+  width: 100%;
+  justify-content: center;
+  margin: 15px 0;
+}
+
+@media (max-width: 680px) {
+  .vs-players-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.vs-player-card {
+  flex: 1;
+  width: 100%;
+  max-width: 320px;
+  padding: 25px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vs-player-card h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.vs-player-card.winner-highlight {
+  transform: scale(1.05);
+}
+
+#vs-p1-card.winner-highlight {
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 25px hsla(180, 100%, 50%, 0.3);
+  background: linear-gradient(135deg, hsla(180, 100%, 50%, 0.08) 0%, hsla(230, 25%, 8%, 0.65) 100%) !important;
+}
+
+#vs-p2-card.winner-highlight {
+  border-color: var(--pink) !important;
+  box-shadow: 0 0 25px hsla(330, 100%, 50%, 0.3);
+  background: linear-gradient(135deg, hsla(330, 100%, 50%, 0.08) 0%, hsla(230, 25%, 8%, 0.65) 100%) !important;
+}
+
+.vs-crown-holder {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+.vs-crown {
+  font-size: 2.2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+  animation: float-crown 2s ease-in-out infinite alternate;
+  display: none; /* hidden by default */
+}
+
+.vs-player-card.winner-highlight .vs-crown {
+  display: inline-block;
+}
+
+@keyframes float-crown {
+  0% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  100% {
+    transform: translateY(-6px) rotate(5deg);
+  }
+}
+
+.vs-player-status {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 16px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  margin-bottom: 20px;
+  border: 1px solid currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.end-screen-buttons {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 580px) {
+  .end-screen-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .end-screen-buttons button {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+
 
