@@ -2,6 +2,9 @@
 
 ![Dimension Eater Banner](banner.png)
 
+## itch.io Page
+[https://darrinlin.itch.io/dimension-eater](https://darrinlin.itch.io/dimension-eater)
+
 ## Overview
 
 Dimension Eater is a high-fidelity, futuristic side-scrolling action puzzle game built with Pixi.js, TypeScript, and Vite. Players control a glowing temporal chain across parallel timeline layers to avert causal cascades and stabilize a collapsing space-time continuum. The experience merges classic snake movement mechanics with complex dimensional jumping, featuring real-time isometric 3D projections, dynamic difficulty scaling, and a responsive cyber-neon visual system.
